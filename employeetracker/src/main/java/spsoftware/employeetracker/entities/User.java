@@ -10,6 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,5 +30,6 @@ public class User {
     private String role;
     private String title;
     private String salary;
+    @Column(name = "phone_number")
     private String phone;
 }

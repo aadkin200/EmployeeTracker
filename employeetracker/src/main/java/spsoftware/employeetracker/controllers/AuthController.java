@@ -1,6 +1,9 @@
 package spsoftware.employeetracker.controllers;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import spsoftware.employeetracker.DTO.AuthResponse;
+import spsoftware.employeetracker.DTO.LoginRequest;
 import spsoftware.employeetracker.DTO.RegisterRequest;
 import spsoftware.employeetracker.entities.User;
 import jakarta.validation.Valid;
@@ -15,10 +18,12 @@ import spsoftware.employeetracker.services.UserService;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+    private final AuthenticationManager authenticationManager;
     private final UserService userService;
     private final JwtService jwtService;
 
-    public AuthController(UserService userService, JwtService jwtService) {
+    public AuthController(AuthenticationManager authenticationManager, UserService userService, JwtService jwtService) {
+        this.authenticationManager = authenticationManager;
         this.userService = userService;
         this.jwtService = jwtService;
     }
@@ -34,6 +39,20 @@ public class AuthController {
         User created = userService.register(user);
 
         String token = jwtService.generateToken(created.getEmail());
+        return ResponseEntity.ok(new AuthResponse(token));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+
+        // This line triggers:
+        // - CustomUserDetailsService.loadUserByUsername(email)
+        // - BCrypt password comparison using PasswordEncoder
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getEmail().trim().toLowerCase(), request.password)
+        );
+
+        String token = jwtService.generateToken(request.getEmail().trim().toLowerCase());
         return ResponseEntity.ok(new AuthResponse(token));
     }
 }
