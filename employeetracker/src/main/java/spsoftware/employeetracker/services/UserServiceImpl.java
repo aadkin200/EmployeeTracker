@@ -29,32 +29,6 @@ public class UserServiceImpl implements UserService {
         return userRepo.findAll();
     }
 
-//    @Override
-//    public Optional<User> updateUser(User user) {
-//        Optional<User> managedUser;
-//        User flushUser;
-//        try {
-//            managedUser = userRepo.findById(user.getId());
-//            if(user.getId() == managedUser.get().getId()) {
-//                managedUser.get().setEmail(user.getEmail());
-//                managedUser.get().setPassword(user.getPassword());
-//                managedUser.get().setFirstName(user.getFirstName());
-//                managedUser.get().setLastName(user.getLastName());
-//                managedUser.get().setDepartment(user.getDepartment());
-//                managedUser.get().setRole(user.getRole());
-//                managedUser.get().setTitle(user.getTitle());
-//                managedUser.get().setSalary(user.getSalary());
-//                managedUser.get().setPhone(user.getPhone());
-//            }
-//            userRepo.saveAndFlush(managedUser.get());
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return Optional.empty();
-//        }
-//        return managedUser;
-//    }
-
     @Override
     public User register(User user) {
         // normalize email (optional but helpful)

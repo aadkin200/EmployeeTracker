@@ -32,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // ✅ Allow CORS preflight through
+        //Allow CORS preflight through
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
@@ -61,10 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     null,
                                     userDetails.getAuthorities()
                             );
-
-                    // ✅ recommended
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }

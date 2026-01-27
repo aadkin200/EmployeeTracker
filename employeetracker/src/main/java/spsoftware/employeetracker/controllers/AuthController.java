@@ -44,14 +44,9 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-
-        // This line triggers:
-        // - CustomUserDetailsService.loadUserByUsername(email)
-        // - BCrypt password comparison using PasswordEncoder
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail().trim().toLowerCase(), request.password)
         );
-
         String token = jwtService.generateToken(request.getEmail().trim().toLowerCase());
         return ResponseEntity.ok(new AuthResponse(token));
     }
