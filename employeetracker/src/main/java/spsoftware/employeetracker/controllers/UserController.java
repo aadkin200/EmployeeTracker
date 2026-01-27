@@ -4,12 +4,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import spsoftware.employeetracker.entities.User;
-import spsoftware.employeetracker.repositories.UserRepository;
 import spsoftware.employeetracker.services.UserService;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/user")
