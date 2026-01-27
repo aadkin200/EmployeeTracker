@@ -1,0 +1,33 @@
+<nav class="nav">
+  <div class="nav__inner">
+    <!-- Left -->
+    <a class="brand" routerLink="/">
+      <span class="brand__logo">ET</span>
+      <span class="brand__text">EmployeeTracker</span>
+    </a>
+
+    <!-- Right -->
+    <div class="links">
+      <!-- Logged in -->
+      <ng-container *ngIf="auth.isLoggedIn(); else loggedOut">
+        <a
+          routerLink="/dashboard"
+          routerLinkActive="active"
+          class="link"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          Dashboard
+        </a>
+
+        <a routerLink="/profile" routerLinkActive="active" class="link"> My Profile </a>
+
+        <button class="btn btn--ghost" (click)="logout()">Logout</button>
+      </ng-container>
+
+      <!-- Logged out -->
+      <ng-template #loggedOut>
+        <a routerLink="/login" routerLinkActive="active" class="btn btn--primary"> Login </a>
+      </ng-template>
+    </div>
+  </div>
+</nav>
