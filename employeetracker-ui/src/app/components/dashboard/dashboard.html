@@ -1,1 +1,87 @@
-<p>dashboard works!</p>
+<div class="page">
+  <header class="header">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="sub">
+        <ng-container *ngIf="me() as m; else noMe">
+          Signed in as <strong>{{ m.email }}</strong>
+          <span class="pill">{{ m.role }}</span>
+          <span class="pill" *ngIf="m.department">{{ m.department }}</span>
+        </ng-container>
+        <ng-template #noMe>Loading your profile…</ng-template>
+      </p>
+    </div>
+  </header>
+
+  <section class="card" *ngIf="loading()">
+    <div class="skeleton-line"></div>
+    <div class="skeleton-line"></div>
+    <div class="skeleton-line"></div>
+  </section>
+
+  <section class="card error" *ngIf="error() as e"><strong>Oops:</strong> {{ e }}</section>
+
+  <!-- If USER lands here, show a friendly message -->
+  <section class="card" *ngIf="!loading() && !error() && role() === 'USER'">
+    <h2>Nothing to manage</h2>
+    <p>Users can update their info from the profile page.</p>
+    <a class="btn" routerLink="/profile">Go to Profile</a>
+  </section>
+
+  <!-- MANAGER / ADMIN dashboard -->
+  <section
+    class="card"
+    *ngIf="!loading() && !error() && (role() === 'ADMIN' || role() === 'MANAGER')"
+  >
+    <!-- ADMIN: department tabs -->
+    <div class="tabs" *ngIf="role() === 'ADMIN'">
+      <button
+        class="tab"
+        *ngFor="let d of departments"
+        [class.active]="selectedDept() === d"
+        (click)="selectDept(d)"
+      >
+        {{ d }}
+        <span class="badge">{{ deptCount(d) }}</span>
+      </button>
+    </div>
+
+    <!-- MANAGER: heading only -->
+    <div class="dept-title" *ngIf="role() === 'MANAGER'">
+      <h2>{{ myDept() }} Department</h2>
+      <p class="sub">You can view everyone in your department.</p>
+    </div>
+
+    <div class="table-wrap" *ngIf="filteredUsers().length; else empty">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Title</th>
+            <th>Role</th>
+            <th>Phone</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of filteredUsers()">
+            <td class="name">{{ fullName(u) }}</td>
+            <td class="mono">{{ u.email }}</td>
+            <td>{{ u.title || '—' }}</td>
+            <td>
+              <span class="pill">{{ u.role || 'USER' }}</span>
+            </td>
+            <td class="mono">{{ u.phone || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #empty>
+      <div class="empty">
+        <h3>No users found</h3>
+        <p>There aren’t any users in this department yet.</p>
+      </div>
+    </ng-template>
+  </section>
+</div>

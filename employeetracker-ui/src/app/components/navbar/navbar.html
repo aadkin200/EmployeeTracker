@@ -10,15 +10,20 @@
     <div class="links">
       <!-- Logged in -->
       <ng-container *ngIf="auth.isLoggedIn(); else loggedOut">
-        <a
-          routerLink="/dashboard"
-          routerLinkActive="active"
-          class="link"
-          [routerLinkActiveOptions]="{ exact: true }"
-        >
-          Dashboard
-        </a>
+        <!-- Dashboard ONLY for MANAGER or ADMIN -->
+        <ng-container *ngIf="userService.me$ | async as me">
+          <a
+            *ngIf="me.role === 'ADMIN' || me.role === 'MANAGER'"
+            routerLink="/dashboard"
+            routerLinkActive="active"
+            class="link"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            Dashboard
+          </a>
+        </ng-container>
 
+        <!-- Profile always visible when logged in -->
         <a routerLink="/profile" routerLinkActive="active" class="link"> My Profile </a>
 
         <button class="btn btn--ghost" (click)="logout()">Logout</button>

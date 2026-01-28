@@ -1,10 +1,10 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-interface LoginResponse {
-  token: string;
-}
+type LoginRequest = { email: string; password: string };
+type LoginResponse = { token: string };
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -12,23 +12,18 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(email: string, password: string) {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, {
-      email,
-      password,
-    });
-  }
-
-  setToken(token: string): void {
-    localStorage.setItem('token', token);
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem('token');
+  login(payload: LoginRequest): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${this.apiUrl}/auth/login`, payload)
+      .pipe(tap((res) => localStorage.setItem('token', res.token)));
   }
 
   logout(): void {
     localStorage.removeItem('token');
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
   }
 
   isLoggedIn(): boolean {

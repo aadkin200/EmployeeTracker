@@ -1,1 +1,51 @@
-<p>login works!</p>
+<div class="page">
+  <div class="card">
+    <div class="brand">
+      <div class="logo">ET</div>
+      <div>
+        <h1>Employee Tracker</h1>
+        <p>Sign in to continue</p>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+      <div class="field">
+        <label>Email</label>
+        <input
+          type="email"
+          formControlName="email"
+          placeholder="you@example.com"
+          autocomplete="email"
+        />
+        <small class="hint" *ngIf="form.controls.email.touched && form.controls.email.invalid">
+          Enter a valid email.
+        </small>
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input
+          type="password"
+          formControlName="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+        />
+        <small
+          class="hint"
+          *ngIf="form.controls.password.touched && form.controls.password.invalid"
+        >
+          Password is required.
+        </small>
+      </div>
+
+      <div class="error" *ngIf="errorMsg">
+        {{ errorMsg }}
+      </div>
+
+      <button class="btn" type="submit" [disabled]="loading">
+        <span *ngIf="!loading">Login</span>
+        <span *ngIf="loading">Signing in…</span>
+      </button>
+    </form>
+  </div>
+</div>

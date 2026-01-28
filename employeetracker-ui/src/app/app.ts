@@ -1,13 +1,21 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { Navbar } from "./components/navbar/navbar";
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterOutlet } from '@angular/router';
+import { Navbar } from './components/navbar/navbar';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Navbar],
-  templateUrl: './app.html',
-  styleUrl: './app.scss'
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, Navbar],
+  template: `
+    <app-navbar *ngIf="!isLoginRoute()"></app-navbar>
+    <router-outlet></router-outlet>
+  `,
 })
 export class App {
-  protected readonly title = signal('employeetracker-ui');
+  constructor(private router: Router) {}
+
+  isLoginRoute(): boolean {
+    return this.router.url.startsWith('/login');
+  }
 }
