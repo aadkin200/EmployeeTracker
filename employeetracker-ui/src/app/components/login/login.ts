@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -21,6 +21,7 @@ export class Login {
   private auth = inject(AuthService);
   private userService = inject(UserService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   loading = false;
   errorMsg: string | null = null;
@@ -42,17 +43,21 @@ export class Login {
     const payload = { email: email.trim().toLowerCase(), password };
 
     this.loading = true;
+    this.cdr.markForCheck();
 
     this.auth
       .login(payload)
-      .pipe(finalize(() => (this.loading = false)))
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.markForCheck();
+        }),
+      )
       .subscribe({
         next: () => {
+          // token saved — now try /user/me
           this.userService.getMe().subscribe({
             next: (me) => {
-              // ✅ store current user so navbar can react
-              this.userService.setMe(me);
-
               const role = (me.role as Role) ?? 'USER';
               this.router.navigate([
                 role === 'ADMIN' || role === 'MANAGER' ? '/dashboard' : '/profile',
@@ -60,12 +65,14 @@ export class Login {
             },
             error: () => {
               this.errorMsg =
-                'Logged in, but failed to load profile. Check JWT interceptor and /user/me.';
+                'Login succeeded, but /user/me returned 403. Token not being accepted.';
+              this.cdr.markForCheck();
             },
           });
         },
         error: () => {
           this.errorMsg = 'Invalid email or password.';
+          this.cdr.markForCheck();
         },
       });
   }
