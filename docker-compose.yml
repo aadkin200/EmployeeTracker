@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: employeetracker-db
+    environment:
+      MYSQL_DATABASE: employeetrack
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./employeetracker
+    container_name: employeetracker-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/employeetrack?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: rootpassword
+      APP_JWT_SECRET: replace-with-long-secret
+      APP_JWT_EXPIRATION_MS: 3600000
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./employeetracker-ui
+    container_name: employeetracker-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
