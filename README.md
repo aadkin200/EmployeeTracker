@@ -78,5 +78,3 @@ This project was developed as a **software engineering capstone** and is structu
 - GitHub (version control)
 
 ---
-
-## Application Architecture
