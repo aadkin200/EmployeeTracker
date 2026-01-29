@@ -1,17 +1,18 @@
-# -------- BUILD STAGE --------
-FROM maven:3.9-eclipse-temurin-17 AS build
+# Build stage
+FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
-
 COPY pom.xml .
 COPY src ./src
+RUN mvn -DskipTests clean package
 
-RUN mvn clean package -DskipTests
-
-# -------- RUN STAGE --------
+# Run stage
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-
-COPY --from=build /app/target/*.jar app.jar
-
+COPY --from=build /app/target/*.war app.war
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+
+# Use prod profile
+ENV SPRING_PROFILES_ACTIVE=prod
+
+ENTRYPOINT ["java","-jar","/app/app.war"]
+

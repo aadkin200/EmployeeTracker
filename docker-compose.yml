@@ -1,9 +1,7 @@
-version: "3.9"
-
 services:
   db:
     image: mysql:8.0
-    container_name: employeetracker-db
+    container_name: employeetrack-db
     environment:
       MYSQL_DATABASE: employeetrack
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -11,30 +9,40 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   backend:
-    build:
-      context: ./employeetracker
-    container_name: employeetracker-backend
+    build: ./employeetracker
+    container_name: employeetrack-backend
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
+      SPRING_PROFILES_ACTIVE: prod
+
+      # Spring datasource (point to the db container, not localhost)
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/employeetrack?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: rootpassword
-      APP_JWT_SECRET: replace-with-long-secret
+
+      # JWT (match application.properties placeholders)
+      APP_JWT_SECRET: "PBKDF2$PBKDF2WithHmacSHA256$310000$JzzfxbiRGFrXw83CoBTXbQ==$p2I0S1ch1SzMu5zR11z/IXdaFLtc3DRDbtle+nR8mXc="
       APP_JWT_EXPIRATION_MS: 3600000
     ports:
       - "8080:8080"
-    depends_on:
-      - db
 
   frontend:
-    build:
-      context: ./employeetracker-ui
-    container_name: employeetracker-frontend
-    ports:
-      - "4200:80"
+    build: ./employeetracker-ui
+    container_name: employeetrack-frontend
     depends_on:
       - backend
+    ports:
+      - "4200:80"
 
 volumes:
   db_data:
