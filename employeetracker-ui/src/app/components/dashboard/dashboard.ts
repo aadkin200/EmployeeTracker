@@ -206,6 +206,7 @@ export class Dashboard {
           // keep tabs consistent
           this.selectedDept.set((created.department || this.selectedDept()) as Department);
           this.showCreate.set(false);
+          this.load();
         },
         error: () => {
           this.actionError.set(
