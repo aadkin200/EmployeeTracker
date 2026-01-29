@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { User } from '../models/user'
 
 type LoginRequest = { email: string; password: string };
 type LoginResponse = { token: string };
@@ -29,4 +30,10 @@ export class AuthService {
   isLoggedIn(): boolean {
     return !!this.getToken();
   }
+
+  createUser(payload: any) {
+      console.log('made it to service');
+      console.log(payload);
+      return this.http.post<User>(`${this.apiUrl}/auth/register`, payload);
+    }
 }

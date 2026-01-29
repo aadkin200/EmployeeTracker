@@ -35,6 +35,11 @@ public class AuthController {
         user.setPassword(request.password);
         user.setFirstName(request.firstName);
         user.setLastName(request.lastName);
+        user.setPhone(request.phone);
+        user.setRole(request.role);
+        user.setSalary(request.salary);
+        user.setDepartment(request.department);
+        user.setTitle(request.title);
 
         User created = userService.register(user);
 

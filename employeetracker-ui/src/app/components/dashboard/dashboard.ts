@@ -1,11 +1,19 @@
-import { Component, computed, effect, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
+
 import { UserService } from '../../services/user';
 import { User } from '../../models/user';
 import { DEPARTMENTS, Department } from '../../constants/constants';
-import { RouterModule } from '@angular/router';
+import { AuthService } from '../../services/auth';
 
 type Role = 'USER' | 'MANAGER' | 'ADMIN';
+
+type UserUpsert = Partial<User> & {
+  email?: string;
+  password?: string; // only used for create
+};
 
 @Component({
   selector: 'app-dashboard',
@@ -27,6 +35,27 @@ export class Dashboard {
 
   role = computed<Role>(() => (this.me()?.role as Role) ?? 'USER');
   myDept = computed(() => (this.me()?.department || '') as Department | string);
+
+  // Admin UI state
+  showCreate = signal(false);
+  showEdit = signal(false);
+  saving = signal(false);
+  actionError = signal<string | null>(null);
+
+  createDraft = signal<UserUpsert>({
+    role: 'USER',
+    department: 'HR',
+    salary: '',
+    title: '',
+    phone: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+  });
+
+  editTarget = signal<User | null>(null);
+  editDraft = signal<UserUpsert>({});
 
   // what dept(s) this dashboard should show
   visibleDepartments = computed<Department[]>(() => {
@@ -57,7 +86,10 @@ export class Dashboard {
     return [];
   });
 
-  constructor(private userService: UserService) {
+  constructor(
+    private userService: UserService,
+    private authService: AuthService,
+  ) {
     this.load();
   }
 
@@ -65,30 +97,24 @@ export class Dashboard {
     this.loading.set(true);
     this.error.set(null);
 
-    // Step 1: get me
     this.userService.getMe().subscribe({
       next: (me) => {
         this.me.set(me);
 
-        // USER shouldn't even be here (they should be routed to /profile),
-        // but in case they land here, we just stop.
         if ((me.role as Role) === 'USER') {
           this.loading.set(false);
           return;
         }
 
-        // Step 2: load all users (admin/manager)
         this.userService.getAllUsers().subscribe({
           next: (users) => {
             this.users.set(users);
 
-            // manager: auto-select their department if valid
             if ((me.role as Role) === 'MANAGER') {
               const dept = (me.department || '') as Department;
               if (this.departments.includes(dept)) this.selectedDept.set(dept);
             }
 
-            // admin: pick first dept tab with people, otherwise default
             if ((me.role as Role) === 'ADMIN') {
               const firstWithPeople = this.departments.find((d) =>
                 users.some((u) => (u.department || '').toLowerCase() === d.toLowerCase()),
@@ -98,13 +124,13 @@ export class Dashboard {
 
             this.loading.set(false);
           },
-          error: (err) => {
+          error: () => {
             this.error.set('Failed to load users.');
             this.loading.set(false);
           },
         });
       },
-      error: (err) => {
+      error: () => {
         this.error.set('Failed to load your profile.');
         this.loading.set(false);
       },
@@ -115,7 +141,6 @@ export class Dashboard {
     this.selectedDept.set(d);
   }
 
-  // optional helpers for UI
   deptCount(d: Department) {
     return this.users().filter((u) => (u.department || '').toLowerCase() === d.toLowerCase())
       .length;
@@ -123,5 +148,150 @@ export class Dashboard {
 
   fullName(u: User) {
     return `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email;
+  }
+
+  // ---------- ADMIN: CREATE ----------
+  openCreate() {
+    this.actionError.set(null);
+    this.createDraft.set({
+      role: 'USER',
+      department: this.selectedDept(),
+      salary: '',
+      title: '',
+      phone: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+    });
+    this.showCreate.set(true);
+  }
+
+  closeCreate() {
+    if (this.saving()) return;
+    this.showCreate.set(false);
+  }
+
+  setCreateField<K extends keyof UserUpsert>(key: K, value: UserUpsert[K]) {
+    this.createDraft.update((d) => ({ ...d, [key]: value }));
+  }
+
+  createUser() {
+    if (this.role() !== 'ADMIN') return;
+
+    const draft = this.createDraft();
+    const email = (draft.email || '').trim().toLowerCase();
+    const password = draft.password || '';
+
+    if (!email || !password) {
+      this.actionError.set('Email and password are required.');
+      return;
+    }
+
+    this.saving.set(true);
+    this.actionError.set(null);
+
+    // IMPORTANT: adjust this method/endpoint in your UserService.
+    this.authService
+      .createUser({
+        ...draft,
+        email,
+        password,
+      })
+      .pipe(finalize(() => this.saving.set(false)))
+      .subscribe({
+        next: (created) => {
+          // add to list
+          this.users.update((list) => [created, ...list]);
+          // keep tabs consistent
+          this.selectedDept.set((created.department || this.selectedDept()) as Department);
+          this.showCreate.set(false);
+        },
+        error: () => {
+          this.actionError.set(
+            'Failed to create user. Check backend /auth/register and validation.',
+          );
+        },
+      });
+  }
+
+  // ---------- ADMIN: EDIT ----------
+  openEdit(u: User) {
+    if (this.role() !== 'ADMIN') return;
+
+    this.actionError.set(null);
+    this.editTarget.set(u);
+    this.editDraft.set({
+      email: u.email,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      department: u.department,
+      role: (u.role as Role) ?? 'USER',
+      title: u.title,
+      salary: u.salary,
+      phone: u.phone,
+    });
+    this.showEdit.set(true);
+  }
+
+  closeEdit() {
+    if (this.saving()) return;
+    this.showEdit.set(false);
+    this.editTarget.set(null);
+  }
+
+  setEditField<K extends keyof UserUpsert>(key: K, value: UserUpsert[K]) {
+    this.editDraft.update((d) => ({ ...d, [key]: value }));
+  }
+
+  saveEdit() {
+    if (this.role() !== 'ADMIN') return;
+
+    const target = this.editTarget();
+    if (!target?.id) return;
+
+    const payload = this.editDraft();
+    const safeEmail = (payload.email || '').trim().toLowerCase();
+
+    this.saving.set(true);
+    this.actionError.set(null);
+
+    this.userService
+      .updateUserById(target.id, { ...payload, email: safeEmail })
+      .pipe(finalize(() => this.saving.set(false)))
+      .subscribe({
+        next: (updated) => {
+          this.users.update((list) => list.map((u) => (u.id === updated.id ? updated : u)));
+          this.showEdit.set(false);
+          this.editTarget.set(null);
+        },
+        error: () => {
+          this.actionError.set('Failed to update user.');
+        },
+      });
+  }
+
+  // ---------- ADMIN: DELETE ----------
+  deleteUser(u: User) {
+    if (this.role() !== 'ADMIN') return;
+    if (!u?.id) return;
+
+    const ok = confirm(`Delete ${u.email}? This cannot be undone.`);
+    if (!ok) return;
+
+    this.saving.set(true);
+    this.actionError.set(null);
+
+    this.userService
+      .deleteUserById(u.id)
+      .pipe(finalize(() => this.saving.set(false)))
+      .subscribe({
+        next: () => {
+          this.users.update((list) => list.filter((x) => x.id !== u.id));
+        },
+        error: () => {
+          this.actionError.set('Failed to delete user.');
+        },
+      });
   }
 }

@@ -54,4 +54,10 @@ export class UserService {
   setMe(me: User | null) {
     this._me$.next(me);
   }
+
+  createUser(payload: any) {
+    console.log('made it to service');
+    console.log(payload);
+    return this.http.post<User>(`${this.baseUrl}/auth/register`, payload);
+  }
 }

@@ -11,6 +11,11 @@
         <ng-template #noMe>Loading your profile…</ng-template>
       </p>
     </div>
+
+    <!-- ADMIN: Create user button -->
+    <div class="header__actions" *ngIf="role() === 'ADMIN'">
+      <button class="btn--primary" (click)="openCreate()">+ Create User</button>
+    </div>
   </header>
 
   <section class="card" *ngIf="loading()">
@@ -21,7 +26,7 @@
 
   <section class="card error" *ngIf="error() as e"><strong>Oops:</strong> {{ e }}</section>
 
-  <!-- If USER lands here, show a friendly message -->
+  <!-- If USER lands here -->
   <section class="card" *ngIf="!loading() && !error() && role() === 'USER'">
     <h2>Nothing to manage</h2>
     <p>Users can update their info from the profile page.</p>
@@ -52,6 +57,11 @@
       <p class="sub">You can view everyone in your department.</p>
     </div>
 
+    <!-- action errors (create/edit/delete) -->
+    <div class="card error" *ngIf="actionError() as ae">
+      <strong>Action failed:</strong> {{ ae }}
+    </div>
+
     <div class="table-wrap" *ngIf="filteredUsers().length; else empty">
       <table class="table">
         <thead>
@@ -61,8 +71,12 @@
             <th>Title</th>
             <th>Role</th>
             <th>Phone</th>
+
+            <!-- ADMIN-only column -->
+            <th *ngIf="role() === 'ADMIN'" class="right">Actions</th>
           </tr>
         </thead>
+
         <tbody>
           <tr *ngFor="let u of filteredUsers()">
             <td class="name">{{ fullName(u) }}</td>
@@ -72,6 +86,16 @@
               <span class="pill">{{ u.role || 'USER' }}</span>
             </td>
             <td class="mono">{{ u.phone || '—' }}</td>
+
+            <!-- ADMIN-only actions -->
+            <td *ngIf="role() === 'ADMIN'" class="right">
+              <button class="btn btn--ghost" (click)="openEdit(u)" [disabled]="saving()">
+                Edit
+              </button>
+              <button class="btn btn--danger" (click)="deleteUser(u)" [disabled]="saving()">
+                Delete
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -84,4 +108,193 @@
       </div>
     </ng-template>
   </section>
+
+  <!-- CREATE MODAL (ADMIN) -->
+  <div class="modal-backdrop" *ngIf="showCreate()">
+    <div class="modal">
+      <div class="modal__head">
+        <h3>Create User</h3>
+        <button class="btn btn--ghost" (click)="closeCreate()">✕</button>
+      </div>
+
+      <div class="modal__body">
+        <div class="grid">
+          <div class="field">
+            <label>Email</label>
+            <input
+              [value]="createDraft().email || ''"
+              (input)="setCreateField('email', $any($event.target).value)"
+              placeholder="user@example.com"
+            />
+          </div>
+
+          <div class="field">
+            <label>Temp Password</label>
+            <input
+              type="password"
+              [value]="createDraft().password || ''"
+              (input)="setCreateField('password', $any($event.target).value)"
+              placeholder="Set initial password"
+            />
+          </div>
+
+          <div class="field">
+            <label>First Name</label>
+            <input
+              [value]="createDraft().firstName || ''"
+              (input)="setCreateField('firstName', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="field">
+            <label>Last Name</label>
+            <input
+              [value]="createDraft().lastName || ''"
+              (input)="setCreateField('lastName', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="field">
+            <label>Department</label>
+            <select
+              [value]="createDraft().department || 'HR'"
+              (change)="setCreateField('department', $any($event.target).value)"
+            >
+              <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Role</label>
+            <select
+              [value]="createDraft().role || 'USER'"
+              (change)="setCreateField('role', $any($event.target).value)"
+            >
+              <option value="USER">USER</option>
+              <option value="MANAGER">MANAGER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Title</label>
+            <input
+              [value]="createDraft().title || ''"
+              (input)="setCreateField('title', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="field">
+            <label>Phone</label>
+            <input
+              [value]="createDraft().phone || ''"
+              (input)="setCreateField('phone', $any($event.target).value)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal__foot">
+        <button class="btn btn--ghost" (click)="closeCreate()" [disabled]="saving()">Cancel</button>
+        <button class="btn" (click)="createUser()" [disabled]="saving()">
+          {{ saving() ? 'Creating…' : 'Create' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT MODAL (ADMIN) -->
+  <div class="modal-backdrop" *ngIf="showEdit() && editTarget() as t">
+    <div class="modal">
+      <div class="modal__head">
+        <h3>Edit User</h3>
+        <button class="btn btn--ghost" (click)="closeEdit()">✕</button>
+      </div>
+
+      <div class="modal__body">
+        <p class="sub">
+          Editing <span class="mono">{{ t.email }}</span>
+        </p>
+
+        <div class="grid">
+          <div class="field">
+            <label>Email</label>
+            <input
+              [value]="editDraft().email || ''"
+              (input)="setEditField('email', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="field">
+            <label>First Name</label>
+            <input
+              [value]="editDraft().firstName || ''"
+              (input)="setEditField('firstName', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="field">
+            <label>Last Name</label>
+            <input
+              [value]="editDraft().lastName || ''"
+              (input)="setEditField('lastName', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="field">
+            <label>Department</label>
+            <select
+              [value]="editDraft().department || ''"
+              (change)="setEditField('department', $any($event.target).value)"
+            >
+              <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Role</label>
+            <select
+              [value]="editDraft().role || 'USER'"
+              (change)="setEditField('role', $any($event.target).value)"
+            >
+              <option value="USER">USER</option>
+              <option value="MANAGER">MANAGER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Title</label>
+            <input
+              [value]="editDraft().title || ''"
+              (input)="setEditField('title', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="field">
+            <label>Salary</label>
+            <input
+              [value]="editDraft().salary || ''"
+              (input)="setEditField('salary', $any($event.target).value)"
+            />
+          </div>
+
+          <div class="field">
+            <label>Phone</label>
+            <input
+              [value]="editDraft().phone || ''"
+              (input)="setEditField('phone', $any($event.target).value)"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal__foot">
+        <button class="btn btn--ghost" (click)="closeEdit()" [disabled]="saving()">Cancel</button>
+        <button class="btn" (click)="saveEdit()" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : 'Save changes' }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

@@ -1,1 +1,102 @@
-<p>profile works!</p>
+<div class="page">
+  <div class="card">
+    <div class="header">
+      <div>
+        <h1>My Profile</h1>
+        <p class="sub" *ngIf="me">
+          Signed in as <span class="pill">{{ me.email }}</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="state" *ngIf="loading">Loading your profile…</div>
+
+    <div class="state error" *ngIf="errorMsg && !loading">
+      {{ errorMsg }}
+    </div>
+
+    <div class="state ok" *ngIf="successMsg && !loading">
+      {{ successMsg }}
+    </div>
+
+    <ng-container *ngIf="!loading && me">
+      <!-- Read-only info -->
+      <div class="grid">
+        <div class="section">
+          <h2>Account</h2>
+
+          <div class="row">
+            <div class="label">Email</div>
+            <div class="value">{{ me.email }}</div>
+          </div>
+
+          <div class="row">
+            <div class="label">Role</div>
+            <div class="value">{{ me.role || 'USER' }}</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Work</h2>
+
+          <div class="row">
+            <div class="label">Department</div>
+            <div class="value">{{ me.department || '—' }}</div>
+          </div>
+
+          <div class="row">
+            <div class="label">Title</div>
+            <div class="value">{{ me.title || '—' }}</div>
+          </div>
+
+          <div class="row">
+            <div class="label">Salary</div>
+            <div class="value">{{ me.salary || '—' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editable personal info -->
+      <div class="section section--edit">
+        <h2>Personal Information</h2>
+        <p class="hint">You can update your personal details here.</p>
+
+        <form [formGroup]="form" (ngSubmit)="save()" class="form">
+          <div class="field">
+            <label>First name</label>
+            <input type="text" formControlName="firstName" placeholder="First name" />
+            <small
+              class="msg"
+              *ngIf="form.controls.firstName.touched && form.controls.firstName.invalid"
+            >
+              First name is required.
+            </small>
+          </div>
+
+          <div class="field">
+            <label>Last name</label>
+            <input type="text" formControlName="lastName" placeholder="Last name" />
+            <small
+              class="msg"
+              *ngIf="form.controls.lastName.touched && form.controls.lastName.invalid"
+            >
+              Last name is required.
+            </small>
+          </div>
+
+          <div class="field">
+            <label>Phone</label>
+            <input type="text" formControlName="phone" placeholder="(555) 555-5555" />
+          </div>
+
+          <div class="actions">
+            <button class="btn" type="submit" [disabled]="saving || form.pristine">
+              <span *ngIf="!saving">Save changes</span>
+              <span *ngIf="saving">Saving…</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </ng-container>
+  </div>
+</div>
