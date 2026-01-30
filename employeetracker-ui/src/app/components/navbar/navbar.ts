@@ -23,4 +23,10 @@ export class Navbar {
     this.userService.clearMe();
     this.router.navigate(['/login']);
   }
+
+  onSearchEnter(value: string) {
+    const q = value.trim();
+    if (!q) return;
+    this.router.navigate(['/search'], { queryParams: { q } });
+  }
 }

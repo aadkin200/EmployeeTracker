@@ -101,3 +101,22 @@
 .btn--ghost:hover {
   background: rgba(0, 0, 0, 0.08);
 }
+
+.search {
+  width: 260px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #e2e8f0;
+  outline: none;
+
+  &::placeholder {
+    color: rgba(226, 232, 240, 0.65);
+  }
+
+  &:focus {
+    border-color: rgba(59, 130, 246, 0.65);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
+  }
+}

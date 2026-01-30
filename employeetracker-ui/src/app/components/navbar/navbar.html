@@ -8,6 +8,14 @@
 
     <!-- Right -->
     <div class="links">
+      <input
+        #searchInput
+        class="search"
+        type="search"
+        placeholder="Search users…"
+        (keydown.enter)="onSearchEnter(searchInput.value)"
+      />
+
       <!-- Logged in -->
       <ng-container *ngIf="auth.isLoggedIn(); else loggedOut">
         <!-- Dashboard ONLY for MANAGER or ADMIN -->

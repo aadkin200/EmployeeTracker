@@ -64,4 +64,12 @@ public class UserController {
         return deleted ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<User>> search(@RequestParam String q, Authentication auth) {
+        // Only ADMIN / MANAGER should be here because /user/** is protected and your UI routes gate it,
+        // but you can add stricter role checks later.
+        return ResponseEntity.ok(userServ.searchUsers(q, auth.getName()));
+    }
+
 }

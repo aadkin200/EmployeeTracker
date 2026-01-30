@@ -1,0 +1,46 @@
+<div class="page">
+  <header class="header">
+    <h1>{{ title() }}</h1>
+    <p class="sub" *ngIf="query()">Showing matching users.</p>
+  </header>
+
+  <section class="card" *ngIf="loading()">
+    <div class="skeleton-line"></div>
+    <div class="skeleton-line"></div>
+    <div class="skeleton-line"></div>
+  </section>
+
+  <section class="card error" *ngIf="error() as e"><strong>Oops:</strong> {{ e }}</section>
+
+  <section class="card" *ngIf="!loading() && !error() && query() && !results().length">
+    <h2>No results</h2>
+    <p>Try searching by name, email, department, or title.</p>
+  </section>
+
+  <section class="card" *ngIf="!loading() && !error() && results().length">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Department</th>
+            <th>Title</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let u of results()">
+            <td class="name">{{ fullName(u) }}</td>
+            <td class="mono">{{ u.email }}</td>
+            <td>{{ u.department || '—' }}</td>
+            <td>{{ u.title || '—' }}</td>
+            <td>
+              <span class="pill">{{ u.role || 'USER' }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

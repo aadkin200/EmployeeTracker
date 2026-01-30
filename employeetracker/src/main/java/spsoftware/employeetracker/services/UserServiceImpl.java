@@ -115,4 +115,23 @@ public class UserServiceImpl implements UserService {
     private String normalizeEmail(String email) {
         return email == null ? null : email.trim().toLowerCase();
     }
+
+    @Override
+    public List<User> searchUsers(String q, String requesterEmail) {
+        String needle = (q == null ? "" : q.trim().toLowerCase());
+
+        if (needle.isBlank()) return List.of();
+
+        // For now: search all users; later you can enforce role rules here
+        return userRepo.findAll().stream()
+                .filter(u ->
+                        (u.getEmail() != null && u.getEmail().toLowerCase().contains(needle)) ||
+                                (u.getFirstName() != null && u.getFirstName().toLowerCase().contains(needle)) ||
+                                (u.getLastName() != null && u.getLastName().toLowerCase().contains(needle)) ||
+                                (u.getDepartment() != null && u.getDepartment().toLowerCase().contains(needle)) ||
+                                (u.getTitle() != null && u.getTitle().toLowerCase().contains(needle))
+                )
+                .toList();
+    }
+
 }

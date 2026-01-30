@@ -21,4 +21,7 @@ public interface UserService {
     boolean deleteUser(Long id);
 
     boolean deleteMe(String emailFromToken);
+
+    List<User> searchUsers(String q, String requesterEmail);
+
 }

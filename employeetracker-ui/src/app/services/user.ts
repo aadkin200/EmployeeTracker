@@ -60,4 +60,10 @@ export class UserService {
     console.log(payload);
     return this.http.post<User>(`${this.baseUrl}/auth/register`, payload);
   }
+
+  searchUsers(q: string) {
+    return this.http.get<User[]>(`${this.baseUrl}/search`, {
+      params: { q },
+    });
+  }
 }
