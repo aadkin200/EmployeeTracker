@@ -1,3 +1,3 @@
 export const environment = {
-  apiUrl: 'https://YOUR-BACKEND.up.railway.app',
+  apiUrl: 'https://back-end-production-87f6.up.railway.app.up.railway.app',
 };
