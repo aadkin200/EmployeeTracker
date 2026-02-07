@@ -1,0 +1,91 @@
+<div class="page">
+  <header class="header">
+    <div>
+      <h1 class="heads">Department Spend Report</h1>
+      <p class="sub">
+        <ng-container *ngIf="me() as m; else noMe">
+          <p class="heads">
+            Signed in as <strong>{{ m.email }}</strong>
+            <span class="pill">{{ m.role }}</span>
+            <span class="pill" *ngIf="m.department">{{ m.department }}</span>
+          </p></ng-container
+        >
+        <ng-template #noMe>Loading your profile…</ng-template>
+      </p>
+    </div>
+
+    <div class="header__actions">
+      <a class="btn btn--ghost" routerLink="/dashboard">← Back to Dashboard</a>
+      <button class="btn btn--ghost" (click)="load()" [disabled]="loading()">Refresh</button>
+    </div>
+  </header>
+
+  <section class="card" *ngIf="loading()">
+    <div class="skeleton-line"></div>
+    <div class="skeleton-line"></div>
+    <div class="skeleton-line"></div>
+  </section>
+
+  <section class="card error" *ngIf="error() as e"><strong>Oops:</strong> {{ e }}</section>
+
+  <section class="card" *ngIf="!loading() && !error()">
+    <div class="summary">
+      <div class="summary__item">
+        <div class="label">Total Employees</div>
+        <div class="value">{{ totalHeadcount() }}</div>
+      </div>
+
+      <div class="summary__item">
+        <div class="label">Total Salary Spend</div>
+        <div class="value">{{ formatMoney(totalSpend()) }}</div>
+      </div>
+
+      <div class="summary__item" *ngIf="role() === 'MANAGER'">
+        <div class="label">Scope</div>
+        <div class="value">{{ myDept() }}</div>
+      </div>
+
+      <div class="summary__item" *ngIf="role() === 'ADMIN'">
+        <div class="label">Scope</div>
+        <div class="value">All Departments</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Department</th>
+            <th class="right">Employees</th>
+            <th class="right">Total Spend</th>
+            <th class="right">Avg Salary</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let r of rows()">
+            <td class="name">{{ r.department }}</td>
+            <td class="right mono">{{ r.headcount }}</td>
+            <td class="right mono">{{ formatMoney(r.totalSalary) }}</td>
+            <td class="right mono">{{ formatMoney(r.avgSalary) }}</td>
+          </tr>
+
+          <tr class="totals">
+            <td class="name">TOTAL</td>
+            <td class="right mono">{{ totalHeadcount() }}</td>
+            <td class="right mono">{{ formatMoney(totalSpend()) }}</td>
+            <td class="right mono">
+              {{ totalHeadcount() ? formatMoney(totalSpend() / totalHeadcount()) : formatMoney(0) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="report-meta" *ngIf="generatedAt() as ts">
+      Report generated on
+      <strong>{{ ts | date: 'fullDate' }}</strong>
+      at
+      <strong>{{ ts | date: 'shortTime' }}</strong>
+    </div>
+  </section>
+</div>

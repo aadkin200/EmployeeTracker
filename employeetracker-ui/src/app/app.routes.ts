@@ -3,12 +3,15 @@ import { Dashboard } from './components/dashboard/dashboard';
 import { Login } from './components/login/login';
 import { Profile } from './components/profile/profile';
 import { authGuard } from './guards/auth-guard';
-import { Search } from './components/search/search'
+import { Search } from './components/search/search';
+import { Report } from './components/report/report';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 
   { path: 'login', component: Login },
+
+  { path: 'report', component: Report, canActivate: [authGuard] },
 
   { path: 'dashboard', component: Dashboard, canActivate: [authGuard] },
 
